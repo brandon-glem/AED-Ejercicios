@@ -37,47 +37,60 @@ private:
 class cola {
 private:
     int A[10];
-    int* i = A, * f = A + 9, * top = NULL;
+    int* i = A, * f = A + 10, * top = NULL;
 public:
     void push(int x) {
         if (!top) {
             top = A;
             *top = x;
+            top++;
         }
-        else {
-            if (top < f) {
-                top++;
-                *top = x;
+        else if (top == f) {
+            if (*A > NULL) {
+                cout << "Cola llena" << endl;
             }
             else {
-                if (top == f) {
-                    int* n = A;
-                    while (true) {
-                        if (*n == NULL) {
-                            *n = x;
-                            break;
-                        }
-                        else if (n == i) {
-                            cout << "pila llena" << endl;
-                            break;
-                        }
-                        else
-                            n++;
-                    }
-                }
-
+                top = A;
+                *top = x;
+                top++;
             }
+        }
+        else {
+            if (top < f && top != i) {
+                *top = x;
+                top++;
+            }
+            else {
+                cout << "cola llena" << endl;
+            }
+
         }
     }
     int pop() {
-        int temp = 0;
-        if (i) {
+        int temp = NULL;
+        if (i == f) {
+            if (*A != NULL) {
+                i = A;
+                temp = *i;
+                *i = NULL;
+                i++;
+            }
+            else {
+                cout << "pila vacia" << endl;
+                i = A;
+                top = NULL;
+            }
+        }
+        else if (i < f && *i != NULL) {
             temp = *i;
             *i = NULL;
             i++;
         }
-        else
+        else {
             cout << "pila vacia" << endl;
+            i = A;
+            top = NULL;
+        }
         return temp;
     }
 
@@ -85,17 +98,30 @@ public:
 
 int main() {
     cola A;
-    for (int i = 22; i < 42; i = i + 2)
+    for (int i = 22; i < 32; i = i + 2)
         A.push(i);
-    A.pop();
-    A.pop();
     A.pop();
     A.pop();
 
     A.push(6);
     A.push(7);
-    A.push(8);
+
     A.push(9);
     A.push(10);
-
+    A.push(11);
+    A.pop();
+    A.pop();
+    A.pop();
+    A.pop();
+    A.pop();
+    A.pop();
+    A.pop();
+    A.pop();
+    A.pop();
+    A.pop();
+    A.pop();
+    A.push(15);
+    A.pop();
+    A.pop();
+    A.pop();
 }
