@@ -25,6 +25,8 @@ public:
     void Print();
     void hijos();
     void hermanos();
+    void primos();
+    void tios();
 
 private:
     bool Find(int x, CBinNode**& p);
@@ -34,6 +36,8 @@ private:
     bool m_b;
     void mostrar_hijos(CBinNode* nodo);
     void mostrar_hermanos(CBinNode* nodo, CBinNode* padre);
+    void mostrar_primos(CBinNode* nodo, CBinNode* padre, CBinNode* abuelo);
+    void mostrar_tios(CBinNode* nodo, CBinNode* padre, CBinNode* abuelo);
 };
 
 CBinTree::CBinTree()
@@ -167,6 +171,68 @@ void CBinTree::mostrar_hermanos(CBinNode* nodo, CBinNode* padre)
     mostrar_hermanos(nodo->nodes[1], nodo);
 }
 
+void CBinTree::primos()
+{
+    if (m_root == nullptr) {
+        std::cout << "El árbol está vacío." << std::endl;
+        return;
+    }
+
+    mostrar_primos(m_root, nullptr, nullptr);
+}
+
+void CBinTree::mostrar_primos(CBinNode* nodo, CBinNode* padre, CBinNode* abuelo)
+{
+    if (nodo == nullptr)
+        return;
+
+    if (padre != nullptr && abuelo != nullptr) {
+        CBinNode* tio = nullptr;
+
+        if (abuelo->nodes[0] == padre)
+            tio = abuelo->nodes[1];
+        else
+            tio = abuelo->nodes[0];
+
+        if (tio != nullptr && tio->nodes[0] != nullptr && tio->nodes[1] != nullptr) {
+            cout << nodo->value << " -> (" << tio->nodes[0]->value << "," << tio->nodes[1]->value << ")" << endl;
+        }
+    }
+
+    mostrar_primos(nodo->nodes[0], nodo, padre);
+    mostrar_primos(nodo->nodes[1], nodo, padre);
+}
+
+void CBinTree::tios()
+{
+    if (m_root == nullptr) {
+        cout << "El árbol está vacío." << endl;
+        return;
+    }
+
+    mostrar_tios(m_root, nullptr, nullptr);
+}
+
+void CBinTree::mostrar_tios(CBinNode* nodo, CBinNode* padre, CBinNode* abuelo)
+{
+    if (nodo == nullptr)
+        return;
+
+    if (padre != nullptr && abuelo != nullptr) {
+        CBinNode* tio = nullptr;
+
+        if (abuelo->nodes[0] == padre)
+            tio = abuelo->nodes[1];
+        else
+            tio = abuelo->nodes[0];
+
+        if (tio != nullptr)
+            cout << nodo->value << " -> " << tio->value << endl;
+    }
+
+    mostrar_tios(nodo->nodes[0], nodo, padre);
+    mostrar_tios(nodo->nodes[1], nodo, padre);
+}
 
 int main()
 {
@@ -177,8 +243,19 @@ int main()
     t.Insert(11); t.Insert(12);
     t.Print();
 
-    cout << "hijos:" << endl;
+    cout << endl << "hijos:" << endl;
     t.hijos();
+    cout << endl;
+
     cout << "hermanos:" << endl;
     t.hermanos();
+    cout << endl;
+
+    cout << "primos:" << endl;
+    t.primos();
+    cout << endl;
+
+    cout << "tios:" << endl;
+    t.tios();
+    cout << endl;
 }
