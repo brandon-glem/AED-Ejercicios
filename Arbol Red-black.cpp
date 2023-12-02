@@ -1,4 +1,4 @@
-#include <iostream> 
+﻿#include <iostream> 
 #include <SFML/Graphics.hpp>
 
 using namespace std;
@@ -10,6 +10,10 @@ public:
     int val;
     COLOR color;
     Node* left, * right, * parent;
+
+    // Coordenadas para dibujar el nodo
+    float x;
+    float y;
 
     Node(int val) : val(val), color(ROJO) {
         parent = left = right = nullptr;
@@ -171,6 +175,7 @@ class RBTree {
 
         Node* current = node;
 
+        // Encuentra la hoja más a la derecha
         while (current->right != nullptr) {
             current = current->right;
         }
@@ -255,6 +260,7 @@ class RBTree {
 
         Node* nodeToDelete = v;
         if (v->left != nullptr && v->right != nullptr) {
+            // Si tiene dos hijos, encontrar el sucesor inmediato (mayor valor en el subárbol izquierdo)
             nodeToDelete = maxValueNode(v->left);
         }
 
@@ -276,6 +282,7 @@ class RBTree {
             }
         }
 
+        // Save the color of the node to be deleted
         COLOR originalColor = nodeToDelete->color;
 
         if (nodeToDelete != v) {
@@ -287,6 +294,7 @@ class RBTree {
         }
 
         if (nodeToDelete->parent == nullptr && child != nullptr) {
+            // If we replaced the root with a non-null child, make it NEGRO
             child->color = NEGRO;
         }
 
@@ -331,7 +339,7 @@ public:
 
         Node* v = search(n);
         if (v->val != n) {
-            std::cout << "No se encontr� el nodo con valor " << n << std::endl;
+            std::cout << "No se encontró el nodo con valor " << n << std::endl;
             return;
         }
 
@@ -346,45 +354,82 @@ public:
         std::cout << std::endl;
     }
 
-};
+    void assignCoordinates(Node* root, float x, float y, float horizontalSpacing) {
+        if (root != nullptr) {
+            root->x = x;
+            root->y = y;
 
-sf::Font font;
-void drawNode(sf::RenderWindow& window, Node* node, float x, float y, float radius) {
-    if (node == nullptr) {
-        return;
+            assignCoordinates(root->left, x - horizontalSpacing, y + 50, horizontalSpacing / 2);
+            assignCoordinates(root->right, x + horizontalSpacing, y + 50, horizontalSpacing / 2);
+        }
     }
 
-    sf::CircleShape circle(radius);
-    circle.setFillColor(node->color == ROJO ? sf::Color::Red : sf::Color::Black);
-    circle.setOutlineThickness(2);
-    circle.setOutlineColor(sf::Color::White);
-    circle.setPosition(x - radius, y - radius);
+    void drawTree(sf::RenderWindow& window, Node* root) {
+        if (root != nullptr) {
+            
+            if (root->left != nullptr) {
+                sf::Vertex line[] = {
+                    sf::Vertex(sf::Vector2f(root->x, root->y), sf::Color::White),
+                    sf::Vertex(sf::Vector2f(root->left->x, root->left->y), sf::Color::White)
+                };
+                window.draw(line, 4, sf::Lines);
+            }
 
-    sf::Text text(to_string(node->val), font, 15);
-    text.setFillColor(sf::Color::White);
-    text.setStyle(sf::Text::Bold);
+            if (root->right != nullptr) {
+                sf::Vertex line[] = {
+                    sf::Vertex(sf::Vector2f(root->x, root->y), sf::Color::White),
+                    sf::Vertex(sf::Vector2f(root->right->x, root->right->y), sf::Color::White)
+                };
+                window.draw(line, 4, sf::Lines);
+            }
 
-    sf::FloatRect textBounds = text.getLocalBounds();
-    text.setOrigin(textBounds.left + textBounds.width / 2.0f, textBounds.top + textBounds.height / 2.0f);
-    text.setPosition(x, y);
+            sf::CircleShape circle(20);
+            circle.setFillColor(root->color == ROJO ? sf::Color::Red : sf::Color::Black);
+            circle.setOutlineThickness(1);
+            circle.setOutlineColor(sf::Color::White);
+            circle.setPosition(root->x - 20, root->y - 20);
 
-    window.draw(circle);
-    window.draw(text);
+            window.draw(circle);
 
-    float offsetX = 50.0f;
-    float offsetY = 50.0f;
+            sf::Font font;
+            font.loadFromFile("arial.ttf");
 
-    drawNode(window, node->left, x - offsetX, y + offsetY, radius);
-    drawNode(window, node->right, x + offsetX, y + offsetY, radius);
-}
+            sf::Text text;
+            text.setFont(font);
+            text.setString(std::to_string(root->val));
+            text.setCharacterSize(12);
+            text.setFillColor(sf::Color::White);
+            text.setPosition(root->x - 5, root->y - 12);
 
-void drawTree(sf::RenderWindow& window, RBTree& tree) {
-    float radius = 25.0f;
-    drawNode(window, tree.getRoot(), window.getSize().x / 2, 50.0f, radius);
-}
+            window.draw(text);
+
+            drawTree(window, root->left);
+            drawTree(window, root->right);
+        }
+    }
+
+    void visualizeTree() {
+        assignCoordinates(root, 400, 50, 200);
+
+        sf::RenderWindow window(sf::VideoMode(800, 600), "RB Tree Visualization");
+
+        while (window.isOpen()) {
+            sf::Event event;
+            while (window.pollEvent(event)) {
+                if (event.type == sf::Event::Closed)
+                    window.close();
+            }
+
+            window.clear();
+
+            drawTree(window, root);
+
+            window.display();
+        }
+    }
+};
 
 int main() {
-
     RBTree tree;
 
     tree.insert(7);
@@ -398,48 +443,21 @@ int main() {
     tree.insert(2);
     tree.insert(6);
     tree.insert(13);
+    tree.printInOrder();
 
+    cout << "Deleting 18, 11, 3, 10, 22" << endl;
     tree.remove(18);
+    tree.printInOrder();
     tree.remove(11);
+    tree.printInOrder();
     tree.remove(3);
+    tree.printInOrder();
     tree.remove(10);
+    tree.printInOrder();
     tree.remove(22);
+    tree.printInOrder();
 
-    sf::RenderWindow window(sf::VideoMode(800, 600), "SFML RBTree Visualization");
-
-    if (!font.loadFromFile("arial.ttf")) {
-        cerr << "Error al cargar la fuente." << endl;
-        return EXIT_FAILURE;
-    }
-
-    while (window.isOpen()) {
-        // Resto del bucle principal...
-
-        window.clear();
-
-        // Dibuja el �rbol
-        drawTree(window, tree);
-
-        window.display();
-    }
-    /*tree.printinorder();
-
-
-
-    cout << "deleting 18, 11, 3, 10, 22" << endl;
-    tree.remove(18);
-    tree.printinorder();
-    tree.remove(11);
-    tree.printinorder();
-    tree.remove(3);
-    tree.printinorder();
-    tree.remove(10);
-    tree.printinorder();
-    tree.remove(22);
-    tree.printinorder();*/
-
-    //drawTree(tree);
-
+    tree.visualizeTree();
 
     return 0;
 }
