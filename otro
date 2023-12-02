@@ -1,0 +1,253 @@
+#include <iostream>
+#include <SFML/Graphics.hpp>
+
+using namespace std;
+
+struct Node {
+    int key;
+    Node* left;
+    Node* right;
+    int height;
+    Node(int key) : key(key), left(nullptr), right(nullptr), height(1) {}
+    float x;  // Agregado: coordenada x
+    float y;  // Agregado: coordenada y
+};
+
+class AVLTree {
+public:
+    Node* root;
+
+    AVLTree() : root(nullptr) {}
+
+    int height(Node* N) {
+        if (N == nullptr)
+            return 0;
+        return N->height;
+    }
+
+    int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
+    Node* rightRotate(Node* y) {
+        Node* x = y->left;
+        Node* T2 = x->right;
+
+        x->right = y;
+        y->left = T2;
+
+        y->height = max(height(y->left), height(y->right)) + 1;
+        x->height = max(height(x->left), height(x->right)) + 1;
+
+        return x;
+    }
+
+    Node* leftRotate(Node* x) {
+        Node* y = x->right;
+        Node* T2 = y->left;
+
+        y->left = x;
+        x->right = T2;
+
+        x->height = max(height(x->left), height(x->right)) + 1;
+        y->height = max(height(y->left), height(y->right)) + 1;
+
+        return y;
+    }
+
+    int getBalance(Node* N) {
+        if (N == nullptr)
+            return 0;
+        return height(N->left) - height(N->right);
+    }
+
+    Node* insert(Node* node, int key) {
+        if (node == nullptr)
+            return new Node(key);
+
+        if (key < node->key)
+            node->left = insert(node->left, key);
+        else if (key > node->key)
+            node->right = insert(node->right, key);
+        else
+            return node;
+
+        node->height = 1 + max(height(node->left), height(node->right));
+
+        int balance = getBalance(node);
+
+        if (balance > 1 && key < node->left->key)
+            return rightRotate(node);
+
+        if (balance < -1 && key > node->right->key)
+            return leftRotate(node);
+
+        if (balance > 1 && key > node->left->key) {
+            node->left = leftRotate(node->left);
+            return rightRotate(node);
+        }
+
+        if (balance < -1 && key < node->right->key) {
+            node->right = rightRotate(node->right);
+            return leftRotate(node);
+        }
+
+        return node;
+    }
+
+    Node* minValueNode(Node* node) {
+        Node* current = node;
+
+        while (current && current->left != nullptr)
+            current = current->left;
+
+        return current;
+    }
+
+    Node* deleteNode(Node* root, int key) {
+        if (root == nullptr)
+            return root;
+
+        if (key < root->key)
+            root->left = deleteNode(root->left, key);
+        else if (key > root->key)
+            root->right = deleteNode(root->right, key);
+        else {
+            if ((root->left == nullptr) || (root->right == nullptr)) {
+                Node* temp = root->left ? root->left : root->right;
+
+                if (temp == nullptr) {
+                    temp = root;
+                    root = nullptr;
+                }
+                else
+                    *root = *temp;
+
+                delete temp;
+            }
+            else {
+                Node* temp = minValueNode(root->right);
+
+                root->key = temp->key;
+
+                root->right = deleteNode(root->right, temp->key);
+            }
+        }
+
+        if (root == nullptr)
+            return root;
+
+        root->height = max(height(root->left), height(root->right)) + 1;
+
+        int balance = getBalance(root);
+
+        if (balance > 1 && getBalance(root->left) >= 0)
+            return rightRotate(root);
+
+        if (balance > 1 && getBalance(root->left) < 0) {
+            root->left = leftRotate(root->left);
+            return rightRotate(root);
+        }
+
+        if (balance < -1 && getBalance(root->right) <= 0)
+            return leftRotate(root);
+
+        if (balance < -1 && getBalance(root->right) > 0) {
+            root->right = rightRotate(root->right);
+            return leftRotate(root);
+        }
+
+        return root;
+    }
+};
+
+void assignCoordinates(Node* root, float x, float y, float horizontalSpacing) {
+    if (root != nullptr) {
+        root->x = x;
+        root->y = y;
+
+        assignCoordinates(root->left, x - horizontalSpacing, y + 50, horizontalSpacing / 2);
+        assignCoordinates(root->right, x + horizontalSpacing, y + 50, horizontalSpacing / 2);
+    }
+}
+
+void drawTree(sf::RenderWindow& window, Node* root) {
+    if (root != nullptr) {
+        
+
+        if (root->left != nullptr) {
+            sf::Vertex line[] = {
+                sf::Vertex(sf::Vector2f(root->x, root->y), sf::Color::White),
+                sf::Vertex(sf::Vector2f(root->left->x, root->left->y), sf::Color::White)
+            };
+            window.draw(line, 2, sf::Lines);
+        }
+
+        if (root->right != nullptr) {
+            sf::Vertex line[] = {
+                sf::Vertex(sf::Vector2f(root->x, root->y), sf::Color::White),
+                sf::Vertex(sf::Vector2f(root->right->x, root->right->y), sf::Color::White)
+            };
+            window.draw(line, 2, sf::Lines);
+        }
+
+        sf::CircleShape circle(20);
+        circle.setFillColor(sf::Color::Green);
+        circle.setPosition(root->x - 20, root->y - 20);
+
+        window.draw(circle);
+
+        sf::Font font;
+        font.loadFromFile("arial.ttf"); // Reemplaza con la ruta a tu fuente
+
+        sf::Text text;
+        text.setFont(font);
+        text.setString(to_string(root->key));
+        text.setCharacterSize(20);
+        text.setFillColor(sf::Color::Black);
+        text.setPosition(root->x - 9, root->y - 12);
+
+        window.draw(text);
+
+        drawTree(window, root->left);
+        drawTree(window, root->right);
+
+    }
+}
+
+void visualizeTree(AVLTree& avl) {
+    assignCoordinates(avl.root, 400, 50, 200);
+
+    sf::RenderWindow window(sf::VideoMode(800, 600), "AVL Tree Visualization");
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+
+        window.clear();
+
+        drawTree(window, avl.root);
+
+        window.display();
+    }
+}
+
+int main() {
+    AVLTree avl;
+    avl.root = nullptr;
+
+    avl.root = avl.insert(avl.root, 10);
+    avl.root = avl.insert(avl.root, 20);
+    avl.root = avl.insert(avl.root, 30);
+    avl.root = avl.insert(avl.root, 40);
+    avl.root = avl.insert(avl.root, 50);
+
+    avl.root = avl.deleteNode(avl.root, 40);
+
+    visualizeTree(avl);
+
+    return 0;
+}
