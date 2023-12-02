@@ -1,4 +1,5 @@
 #include<iostream>
+#include <SFML/Graphics.hpp>
 using namespace std;
 
 struct Node {
@@ -6,6 +7,10 @@ struct Node {
     Node* left;
     Node* right;
     int height;
+
+    // Coordenadas para dibujar el nodo
+    float x;
+    float y;
 };
 
 int height(Node* N) {
@@ -141,6 +146,59 @@ void inOrder(Node* root) {
     }
 }
 
+void assignCoordinates(Node* root, float x, float y, float horizontalSpacing) {
+    if (root != nullptr) {
+        root->x = x;
+        root->y = y;
+
+        assignCoordinates(root->left, x - horizontalSpacing, y + 50, horizontalSpacing / 2);
+        assignCoordinates(root->right, x + horizontalSpacing, y + 50, horizontalSpacing / 2);
+    }
+}
+
+void drawTree(sf::RenderWindow& window, Node* root) {
+    if (root != nullptr) {
+        sf::CircleShape circle(20);
+        circle.setFillColor(sf::Color::Green);
+        circle.setPosition(root->x - 20, root->y - 20);
+
+        window.draw(circle);
+
+        sf::Font font;
+        font.loadFromFile("arial.ttf"); // Reemplaza con la ruta a tu fuente
+
+        sf::Text text;
+        text.setFont(font);
+        text.setString(std::to_string(root->key));
+        text.setCharacterSize(18);
+        text.setFillColor(sf::Color::White);
+        text.setPosition(root->x - 5, root->y - 12);
+
+        window.draw(text);
+
+        if (root->left != nullptr) {
+            sf::Vertex line[] = {
+                sf::Vertex(sf::Vector2f(root->x, root->y), sf::Color::Green),
+                sf::Vertex(sf::Vector2f(root->left->x, root->left->y), sf::Color::Green)
+            };
+            window.draw(line, 2, sf::Lines);
+        }
+
+        if (root->right != nullptr) {
+            sf::Vertex line[] = {
+                sf::Vertex(sf::Vector2f(root->x, root->y), sf::Color::Green),
+                sf::Vertex(sf::Vector2f(root->right->x, root->right->y), sf::Color::Green)
+            };
+            window.draw(line, 2, sf::Lines);
+        }
+
+        drawTree(window, root->left);
+        drawTree(window, root->right);
+    }
+}
+
+
+
 int main() {
     Node* root = NULL;
     root = insert(root, 10);
@@ -155,6 +213,26 @@ int main() {
 
     root = deleteNode(root, 40);
     inOrder(root);
+
+    assignCoordinates(root, 400, 50, 200);
+
+    sf::RenderWindow window(sf::VideoMode(800, 600), "AVL Tree Visualization");
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+        
+        window.clear();
+
+        drawTree(window, root);
+
+        window.display();
+
+        
+    }
 
     return 0;
 }
