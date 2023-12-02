@@ -1,4 +1,5 @@
 #include <iostream> 
+#include <SFML/Graphics.hpp>
 
 using namespace std;
 
@@ -170,7 +171,6 @@ class RBTree {
 
         Node* current = node;
 
-        // Encuentra la hoja más a la derecha
         while (current->right != nullptr) {
             current = current->right;
         }
@@ -255,7 +255,6 @@ class RBTree {
 
         Node* nodeToDelete = v;
         if (v->left != nullptr && v->right != nullptr) {
-            // Si tiene dos hijos, encontrar el sucesor inmediato (mayor valor en el subárbol izquierdo)
             nodeToDelete = maxValueNode(v->left);
         }
 
@@ -277,7 +276,6 @@ class RBTree {
             }
         }
 
-        // Save the color of the node to be deleted
         COLOR originalColor = nodeToDelete->color;
 
         if (nodeToDelete != v) {
@@ -289,17 +287,11 @@ class RBTree {
         }
 
         if (nodeToDelete->parent == nullptr && child != nullptr) {
-            // If we replaced the root with a non-null child, make it NEGRO
             child->color = NEGRO;
         }
 
         delete nodeToDelete;
     }
-
-
-
-
-
 
 public:
     RBTree() : root(nullptr) {}
@@ -353,9 +345,46 @@ public:
             inorder(root);
         std::cout << std::endl;
     }
+
 };
 
+sf::Font font;
+void drawNode(sf::RenderWindow& window, Node* node, float x, float y, float radius) {
+    if (node == nullptr) {
+        return;
+    }
+
+    sf::CircleShape circle(radius);
+    circle.setFillColor(node->color == ROJO ? sf::Color::Red : sf::Color::Black);
+    circle.setOutlineThickness(2);
+    circle.setOutlineColor(sf::Color::White);
+    circle.setPosition(x - radius, y - radius);
+
+    sf::Text text(to_string(node->val), font, 15);
+    text.setFillColor(sf::Color::White);
+    text.setStyle(sf::Text::Bold);
+
+    sf::FloatRect textBounds = text.getLocalBounds();
+    text.setOrigin(textBounds.left + textBounds.width / 2.0f, textBounds.top + textBounds.height / 2.0f);
+    text.setPosition(x, y);
+
+    window.draw(circle);
+    window.draw(text);
+
+    float offsetX = 50.0f;
+    float offsetY = 50.0f;
+
+    drawNode(window, node->left, x - offsetX, y + offsetY, radius);
+    drawNode(window, node->right, x + offsetX, y + offsetY, radius);
+}
+
+void drawTree(sf::RenderWindow& window, RBTree& tree) {
+    float radius = 25.0f;
+    drawNode(window, tree.getRoot(), window.getSize().x / 2, 50.0f, radius);
+}
+
 int main() {
+
     RBTree tree;
 
     tree.insert(7);
@@ -369,21 +398,48 @@ int main() {
     tree.insert(2);
     tree.insert(6);
     tree.insert(13);
-    tree.printInOrder();
 
-    cout << "Deleting 18, 11, 3, 10, 22" << endl;
     tree.remove(18);
-    tree.printInOrder();
     tree.remove(11);
-    tree.printInOrder();
     tree.remove(3);
-    tree.printInOrder();
     tree.remove(10);
-    tree.printInOrder();
     tree.remove(22);
-    tree.printInOrder();
 
-    
+    sf::RenderWindow window(sf::VideoMode(800, 600), "SFML RBTree Visualization");
+
+    if (!font.loadFromFile("arial.ttf")) {
+        cerr << "Error al cargar la fuente." << endl;
+        return EXIT_FAILURE;
+    }
+
+    while (window.isOpen()) {
+        // Resto del bucle principal...
+
+        window.clear();
+
+        // Dibuja el árbol
+        drawTree(window, tree);
+
+        window.display();
+    }
+    /*tree.printinorder();
+
+
+
+    cout << "deleting 18, 11, 3, 10, 22" << endl;
+    tree.remove(18);
+    tree.printinorder();
+    tree.remove(11);
+    tree.printinorder();
+    tree.remove(3);
+    tree.printinorder();
+    tree.remove(10);
+    tree.printinorder();
+    tree.remove(22);
+    tree.printinorder();*/
+
+    //drawTree(tree);
+
 
     return 0;
 }
