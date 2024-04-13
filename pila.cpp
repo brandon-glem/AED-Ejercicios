@@ -29,6 +29,17 @@ public:
             cout << "pila vacia" << endl;
         return temp;
     }
+    
+    void mostrar() {
+        int* temp = top;
+        cout << "Contenido de la pila: ";
+        while (temp >= i) {
+            cout << *temp << " ";
+            temp--;
+        }
+        cout << endl;
+    }
+
 private:
     int A[10];
     int* i = A, * f = A + 9, * top = NULL;
@@ -94,10 +105,19 @@ public:
         return temp;
     }
 
+    void mostrar() {
+        int* temp = i;
+        cout << "Contenido de la cola: ";
+        while (temp < f) {
+            cout << *temp << " ";
+            temp++;
+        }
+        cout << endl;
+    }
 };
 
 int main() {
-    cola A;
+    pila A;
     for (int i = 22; i < 32; i = i + 2)
         A.push(i);
     A.pop();
@@ -112,16 +132,7 @@ int main() {
     A.pop();
     A.pop();
     A.pop();
-    A.pop();
-    A.pop();
-    A.pop();
-    A.pop();
-    A.pop();
-    A.pop();
-    A.pop();
-    A.pop();
-    A.push(15);
-    A.pop();
-    A.pop();
-    A.pop();
+   
+
+    A.mostrar();
 }
